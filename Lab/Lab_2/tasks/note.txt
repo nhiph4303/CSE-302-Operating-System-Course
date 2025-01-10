@@ -1,0 +1,8 @@
+a) Extends Thread
++ Có tên (dùng nhiều lần)
++ Không có tên (1 lần)
+
+b) Implements Runnable (Nên chọn cách này thay vì cách a)
++ Có tên (dùng lại nhiều lần)
++ Không tên (dùng 1 lần)
+
