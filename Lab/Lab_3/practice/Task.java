@@ -32,6 +32,5 @@ public class Task {
     public void setBurst(int burst) {
         this.burst = burst;
     }
-
     
 }
