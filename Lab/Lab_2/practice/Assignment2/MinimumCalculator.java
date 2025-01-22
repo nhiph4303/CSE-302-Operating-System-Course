@@ -13,12 +13,12 @@ public class MinimumCalculator implements Runnable {
 
     @Override
     public void run() {
-        int min = Integer.MAX_VALUE; // Khởi tạo giá trị nhỏ nhất
+        int min = Integer.MAX_VALUE; 
         for (int num : numbers) {
             if (num < min) {
-                min = num; // Cập nhật giá trị nhỏ nhất nếu tìm thấy số nhỏ hơn
+                min = num; 
             }
         }
-        sharedData.setMinimum(min); // Ghi giá trị nhỏ nhất vào SharedData
+        sharedData.setMinimum(min); 
     }
 }

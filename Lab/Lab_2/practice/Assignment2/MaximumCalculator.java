@@ -13,12 +13,12 @@ public class MaximumCalculator implements Runnable {
 
     @Override
     public void run() {
-        int max = Integer.MIN_VALUE; // Khởi tạo giá trị lớn nhất là giá trị nhỏ nhất của Integer
+        int max = Integer.MIN_VALUE;
         for (int num : numbers) {
             if (num > max) {
-                max = num; // Cập nhật giá trị lớn nhất nếu tìm thấy số lớn hơn
+                max = num; 
             }
         }
-        sharedData.setMaximum(max); // Ghi giá trị lớn nhất vào SharedData
+        sharedData.setMaximum(max); 
     }
 }

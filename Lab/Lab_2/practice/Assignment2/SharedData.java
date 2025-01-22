@@ -11,32 +11,27 @@ public class SharedData {
         this.minimum = minimum;
     }
 
-    public double getAverage() {
+    public synchronized double getAverage() {
         return average;
     }
 
-    public void setAverage(double average) {
+    public synchronized void setAverage(double average) {
         this.average = average;
     }
 
-    public int getMaximum() {
+    public synchronized int getMaximum() {
         return maximum;
     }
 
-    public void setMaximum(int maximum) {
+    public synchronized void setMaximum(int maximum) {
         this.maximum = maximum;
     }
 
-    public int getMinimum() {
+    public synchronized int getMinimum() {
         return minimum;
     }
 
-    public void setMinimum(int minimum) {
+    public synchronized void setMinimum(int minimum) {
         this.minimum = minimum;
     }
-
-    
-
-    
-    
 }

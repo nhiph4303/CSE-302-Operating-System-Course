@@ -18,6 +18,6 @@ public class AverageCalculator implements Runnable {
             sum += num;
         }
         double avg = sum / numbers.size();
-        sharedData.setAverage(avg); // Ghi giá trị trung bình vào SharedData
+        sharedData.setAverage(avg); 
     }
 }
