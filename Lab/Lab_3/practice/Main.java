@@ -6,12 +6,12 @@ public class Main {
 
     public static void main(String[] args) {
         List<Task> queue = new ArrayList<>();
-        BufferedReader rd = null; // Khai báo rd bên ngoài khối try
+        BufferedReader rd = null;
 
         try {
             rd = new BufferedReader(new FileReader(Main.TASK_FILE));
             String line;
-            while ((line = rd.readLine()) != null) { // Đọc từng dòng
+            while ((line = rd.readLine()) != null) {
                 String[] components = line.split(",");
                 if (components.length != 3) {
                     System.out.println("Invalid format: " + line);
@@ -39,18 +39,20 @@ public class Main {
             }
         }
 
-        Scheduler fcfs_scheduler = new FCFS_Scheduler();
-        List<ScheduleInfo> result1 = fcfs_scheduler.schedule(queue);
+        runScheduler(new FCFS_Scheduler(), queue, "First Come First Serve (FCFS)");
+        runScheduler(new SJF_Scheduler(), queue, "Shortest Job First (SJF)");
+        runScheduler(new Priority_Scheduler(), queue, "Priority Scheduling");
+        runScheduler(new RR_Scheduler(10), queue, "Round-robin (RR) scheduling");
+        runScheduler(new PriorityRR_Scheduler(10), queue, "Priority with round-robin scheduling");
+    }
 
-        for (ScheduleInfo info : result1) {
-            System.out.println(info);
-        }
+    private static void runScheduler(Scheduler scheduler, List<Task> queue, String algorithmName) {
+        System.out.println("\nAlgorithm: " + algorithmName);
+        List<ScheduleInfo> results = scheduler.schedule(new ArrayList<>(queue));
 
-        Scheduler sjf_scheduler = new SJF_Scheduler();
-        List<ScheduleInfo> result2 = sjf_scheduler.schedule(queue);
-
-        for (ScheduleInfo info : result2) {
+        for (ScheduleInfo info : results) {
             System.out.println(info);
         }
     }
+
 }
