@@ -1,66 +1,71 @@
+package Assignment4;
 import java.util.concurrent.locks.*;
 
 public class SecondReadersWriters {
-    private int readCount = 0;
-    private int writeCount = 0;
-    private int waitingWriters = 0;
-
-    private Lock lock = new ReentrantLock();
-    private Condition readCond = this.lock.newCondition();
-    private Condition writeCond = this.lock.newCondition();
+    private int readers = 0;       
+    private int writers = 0;       
+    private int waitingWriters = 0; 
+    private final Lock lock = new ReentrantLock();
+    private final Condition readCondition = lock.newCondition();
+    private final Condition writeCondition = lock.newCondition();
 
     public SecondReadersWriters() {
     }
 
-    public void readEnter() throws InterruptedException {
-        this.lock.lock();
+    public void readEnter(int readerId) throws InterruptedException {
+        lock.lock();
         try {
-            while (this.writeCount > 0 || this.waitingWriters > 0) {
-                this.readCond.await();
+            while (writers > 0 || waitingWriters > 0) {
+                System.out.println("Reader " + readerId + " is waiting (Writer is waiting/writing)...");
+                readCondition.await();
             }
-            this.readCount++;
+            readers++;
+            System.out.println("Reader " + readerId + " is reading. Active Readers: " + readers);
         } finally {
-            this.lock.unlock();
+            lock.unlock();
         }
     }
 
-    public void readExit() {
-        this.lock.lock();
+    public void readExit(int readerId) {
+        lock.lock();
         try {
-            this.readCount--;
-            if (this.readCount == 0) {
-                this.writeCond.signal();
+            readers--;
+            System.out.println("Reader " + readerId + " has finished reading.");
+            if (readers == 0) {
+                writeCondition.signal();
             }
         } finally {
-            this.lock.unlock();
+            lock.unlock();
         }
     }
 
-    public void writeEnter() throws InterruptedException {
-        this.lock.lock();
+    public void writeEnter(int writerId) throws InterruptedException {
+        lock.lock();
         try {
-            this.waitingWriters++;
-            while (this.readCount > 0 || this.writeCount > 0) {
-                this.writeCond.await();
+            waitingWriters++;
+            while (readers > 0 || writers > 0) {
+                System.out.println("Writer " + writerId + " is waiting (Readers or other Writer are active)...");
+                writeCondition.await();
             }
-            this.waitingWriters--;
-            this.writeCount++;
+            waitingWriters--; 
+            writers++;
+            System.out.println("Writer " + writerId + " is WRITING...");
         } finally {
-            this.lock.unlock();
+            lock.unlock();
         }
     }
-
-    public void writeExit() {
-        this.lock.lock();
+    public void writeExit(int writerId) {
+        lock.lock();
         try {
-            this.writeCount--;
-            if (this.waitingWriters > 0) {
-                this.writeCond.signal();
+            writers--;
+            System.out.println("Writer " + writerId + " has finished writing.");
+            if (waitingWriters > 0) {
+                writeCondition.signal(); 
             } else {
-                this.readCond.signalAll();
+                readCondition.signalAll(); 
             }
         } finally {
-            this.lock.unlock();
+            lock.unlock();
         }
     }
 }

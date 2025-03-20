@@ -1,110 +1,65 @@
+package Assignment3;
+
 import java.util.*;
 
 public class Main {
-    public static void main(String[] args) throws InterruptedException {
-        FirstReadersWriters rw = new FirstReadersWriters();
+    public static void main(String[] args) {
+        FirstReadersWriters database = new FirstReadersWriters();
+        Scanner sc = new Scanner(System.in);
 
-        List<Thread> readThreads = new ArrayList<Thread>();
+        System.out.println("Enter number of readers: ");
+        int numReaders = sc.nextInt();
+        System.out.println("Enter number of writers: ");
+        int numWriters = sc.nextInt();
 
-        for (int i = 0; i < 10; i++) {
-            Thread t = new ReadThread(rw);
-            readThreads.add(t);
-            t.start();
+        Thread[] readers = new Thread[numReaders];
+        Thread[] writers = new Thread[numWriters];
 
+        for (int i = 0; i < numReaders; i++) {
+            int readerId = i + 1;
+            readers[i] = new Thread(() -> {
+                try {
+                    database.readEnter(readerId);
+                    Thread.sleep(1000); 
+                    database.readExit(readerId);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+            readers[i].start();
         }
 
-        List<Thread> writeThreads = new ArrayList<Thread>();
-        for (int i = 0; i < 5; i++) {
-            Thread t = new WriteThread(rw);
-            writeThreads.add(t);
-            t.start();
-
+        for (int i = 0; i < numWriters; i++) {
+            int writerId = i + 1;
+            writers[i] = new Thread(() -> {
+                try {
+                    database.writeEnter(writerId);
+                    Thread.sleep(2000); 
+                    database.writeExit(writerId);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+            writers[i].start();
         }
 
-        Thread.sleep(5000);
-
-        for (Thread t : readThreads) {
-            ((ReadThread) t).shutdown();
-        }
-
-        for (Thread t : writeThreads) {
-            ((WriteThread) t).shutdown();
-        }
-    }
-}
-
-class ReadThread extends Thread {
-    private FirstReadersWriters rw;
-    private boolean running = true;
-
-    public ReadThread(FirstReadersWriters rw) {
-        this.rw = rw;
-    }
-
-    @Override
-    public void run() {
-        Random rd = new Random();
-        try {
-            while (this.running == true) {
-                this.rw.readEnter();
-
-                // reading
-                System.out.println("I am reading...");
-
-                Thread.sleep(rd.nextInt(100));
-
-                System.out.println("Done.");
-
-                this.rw.readExit();
-
-                Thread.sleep(rd.nextInt(50));
-
+        for (Thread reader : readers) {
+            try {
+                reader.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-        } catch (InterruptedException e) {
         }
 
-    }
-
-    public void shutdown() {
-        this.interrupt();
-        this.running = false;
-    }
-}
-
-class WriteThread extends Thread {
-    private FirstReadersWriters rw;
-    private boolean running = true;
-
-    public WriteThread(FirstReadersWriters rw) {
-        this.rw = rw;
-    }
-
-    @Override
-    public void run() {
-        Random rd = new Random();
-        try {
-            while (this.running == true) {
-                this.rw.writeEnter();
-
-                // reading
-                System.out.println("I am writing...");
-
-                Thread.sleep(rd.nextInt(100));
-
-                System.out.println("Done.");
-
-                this.rw.writeExit();
-
-                Thread.sleep(rd.nextInt(50));
-
+        for (Thread writer : writers) {
+            try {
+                writer.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-        } catch (InterruptedException e) {
         }
 
-    }
-
-    public void shutdown() {
-        this.interrupt();
-        this.running = false;
+        System.out.println("All readers and writers have finished.");
+        sc.close();
     }
 }
