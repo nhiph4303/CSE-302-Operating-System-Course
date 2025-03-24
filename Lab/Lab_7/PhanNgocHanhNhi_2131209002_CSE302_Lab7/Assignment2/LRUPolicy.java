@@ -2,12 +2,12 @@ package Assignment2;
 
 import java.util.LinkedList;
 
-public class FIFOPolicy implements ReplacementPolicy {
+public class LRUPolicy implements ReplacementPolicy {
     private int entryNum;
     private int[] values;
     private LinkedList<Integer> positionQueue = new LinkedList<>();
 
-    public FIFOPolicy(int entryNum) {
+    public LRUPolicy(int entryNum) {
         this.entryNum = entryNum;
         this.values = new int[entryNum];
         for (int i = 0; i < values.length; i++) {
@@ -22,6 +22,8 @@ public class FIFOPolicy implements ReplacementPolicy {
     public Result refer(int value) {
         for (int i = 0; i < values.length; i++) {
             if (this.values[i] == value) {
+                this.positionQueue.remove((Integer)i);
+                this.positionQueue.addLast(i);
                 return new Result(true, value, i, -1);
             }
         }
