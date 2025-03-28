@@ -1,21 +1,22 @@
 package Assignment3;
 
-import java.util.*;
+import java.util.ArrayList;
 
 public class Bank {
     private ArrayList<Account> accounts = new ArrayList<>();
 
-    public Bank(int accountNum, int balance) {
-        for (int i = 0; i < accountNum; i++) {
+    public Bank(int accountNumber, double balance) {
+        for (int i = 0; i < accountNumber; i++) {
             Account acc = new Account(i, balance);
             this.accounts.add(acc);
         }
     }
 
-    protected Account find(int id) {
-        for (int i = 0; i < this.accounts.size(); i++) {
-            if (this.accounts.get(i).getId() == id)
-                return this.accounts.get(i);
+    private Account find(int id) {
+        for (Account account : this.accounts) {
+            if (account.getId() == id) {
+                return account;
+            }
         }
         return null;
     }
@@ -24,8 +25,9 @@ public class Bank {
         Account from = this.find(fromId);
         Account to = this.find(toId);
 
-        if (from == null || to == null)
+        if (from == null || to == null) {
             return false;
+        }
 
         Account firstLock = (System.identityHashCode(from) < System.identityHashCode(to)) ? from : to;
         Account secondLock = (firstLock == from) ? to : from;
@@ -41,8 +43,8 @@ public class Bank {
             to.setBalance(to.getBalance() + amount);
             return true;
         } finally {
-            secondLock.getLock().unlock();
             firstLock.getLock().unlock();
+            secondLock.getLock().unlock();
         }
     }
 }

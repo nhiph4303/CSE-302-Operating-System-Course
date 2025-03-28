@@ -1,82 +1,79 @@
-package Assignment1;
-
-import java.util.*;
-import java.util.concurrent.locks.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class H2O {
-	private int numOfHydrogen;
-	private int numOfOxygen;
-	private Lock lock = new ReentrantLock();
-	private Condition hydrogenCond = this.lock.newCondition();
-	private Condition oxygenCond = this.lock.newCondition();
-	private List<String> history = new ArrayList<>();
-	private int numOfH2O;
+    private boolean fairness;
+    private int hydroCount = 0;
+    private int oxyCount = 0;
 
-	public void hydrogen() throws InterruptedException {
-		this.lock.lock();
-		try {
-			if (this.numOfHydrogen > 0 && this.numOfOxygen > 0) {
-				this.hydrogenCond.signal();
-				this.numOfHydrogen--;
-				this.oxygenCond.signal();
-				this.numOfOxygen--;
-				this.numOfH2O++;
-				this.history.add("Enough to form, "+numOfH2O + " H2O were created!");
-				this.history.add("There are " + this.numOfHydrogen + " hydro left");
-				this.history.add("There are " + this.numOfOxygen + " oxy left");
-				
-			} else {
-				this.numOfHydrogen++;
-				this.history.add("Hydrogen await");
-				this.history.add("There are " + this.numOfHydrogen + " hydro available");
-				this.history.add("There are " + this.numOfOxygen + " oxy available");
-				this.hydrogenCond.await();
+    private ReentrantLock lock;
+    private Condition hydroCond;
+    private Condition oxyCond;
 
-			}
-		} finally {
-			this.lock.unlock();
-		}
-	}
+    public H2O(boolean fairness) {
+        this.fairness = fairness;
+        this.lock = new ReentrantLock(fairness);
+        this.hydroCond = this.lock.newCondition();
+        this.oxyCond = this.lock.newCondition();
+    }
 
-	public void oxygen() throws InterruptedException {
-		this.lock.lock();
-		try {
-			if (this.numOfHydrogen > 1 && this.numOfOxygen >= 0) {
-				this.hydrogenCond.signal();
-				this.hydrogenCond.signal();
-				this.numOfHydrogen -= 2;
-				this.numOfH2O++;
-				this.history.add("Enough to form, "+ numOfH2O + " H20 were created!");
-				this.history.add("There are " + this.numOfHydrogen + " hydro left");
-				this.history.add("There are " + this.numOfOxygen + " oxy left");
-				
-			} else {
-				this.numOfOxygen++;
-				this.history.add("Oxygen await");
-				this.history.add("There are " + this.numOfHydrogen + " hydro available");
-				this.history.add("There are " + this.numOfOxygen + " oxy available");
-				this.oxygenCond.await();
+    public void hydrogen() throws InterruptedException {
+        this.lock.lock();
+        try {
+            while (this.hydroCount == 2) { 
+                this.hydroCond.await(); 
+            }
+            this.hydroCount++;
+            System.out.println("H");
+            if (this.hydroCount == 2 && this.oxyCount == 1) {
+                System.out.println("Molecule H2O formed.");
 
-			}
-		} finally {
-			this.lock.unlock();
-		}
-	}
+                this.hydroCount = 0;
+                this.oxyCount = 0;
 
-	public List<String> getHistory() {
-		return history;
-	}
+                if (this.fairness) {
+                    this.hydroCond.signal();
+                    this.hydroCond.signal();
+                    this.oxyCond.signal();
+                } else {
+                    this.hydroCond.signalAll();
+                    this.oxyCond.signalAll();
+                }
+            } else {
+                this.oxyCond.signal(); 
+            }
+        } finally {
+            this.lock.unlock();
+        }
+    }
 
-	public void setHistory(List<String> history) {
-		this.history = history;
-	}
+    public void oxygen() throws InterruptedException {
+        this.lock.lock();
+        try {
+            while (this.oxyCount == 1) { 
+                this.oxyCond.await(); 
+            }
+            this.oxyCount++;
+            System.out.println("O");
+            if (this.hydroCount == 2 && this.oxyCount == 1) {
+                System.out.println("Molecule H2O formed.");
 
-	public int getNumOfH2O() {
-		return numOfH2O;
-	}
+                this.hydroCount = 0;
+                this.oxyCount = 0;
 
-	public void setNumOfH2O(int numOfH2O) {
-		this.numOfH2O = numOfH2O;
-	}
-
+                if (this.fairness) {
+                    this.hydroCond.signal();
+                    this.hydroCond.signal();
+                    this.oxyCond.signal();
+                } else {
+                    this.hydroCond.signalAll();
+                    this.oxyCond.signalAll();
+                }
+            } else {
+                this.hydroCond.signal(); 
+            }
+        } finally {
+            this.lock.unlock();
+        }
+    }
 }

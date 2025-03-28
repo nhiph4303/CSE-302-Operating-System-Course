@@ -1,97 +1,96 @@
 package Assignment4;
 
+import java.util.ArrayList;
+
 public class Banker {
-    private int resourceTypeNum;  
-    private int customerNum;      
-    private int[] available;      
-    private int[][] maximum;       
-    private int[][] allocation;  
+    private int resourceTypeNumber;
+    private int customerNumber;
+    private int[] available;
+    private int[][] maximum;
+    private int[][] allocation;
 
-    public Banker(int[] avail, int[][] max, int[][] alloc) throws Exception {
-        this.available = avail;
-        this.maximum = max;
-        this.allocation = alloc;
-        this.resourceTypeNum = avail.length;
-        this.customerNum = alloc.length;
+    public Banker(int[] available, int[][] maximum, int[][] allocation) {
+        this.available = available;
+        this.maximum = maximum;
+        this.allocation = allocation;
+        this.resourceTypeNumber = available.length;
+        this.customerNumber = maximum.length;
     }
 
-    private int[][] getNeed() {
-        int[][] need = new int[customerNum][resourceTypeNum];
-        for (int i = 0; i < customerNum; i++) {
-            for (int j = 0; j < resourceTypeNum; j++) {
-                need[i][j] = maximum[i][j] - allocation[i][j];
-            }
-        }
-        return need;
-    }
+    public ArrayList<Integer> isSafeState() {
+        int[] work = available.clone();
+        boolean[] finish = new boolean[customerNumber];
+        ArrayList<Integer> safeSequence = new ArrayList<>();
 
-    public boolean isSafeState() {
-        int[][] need = getNeed();
-        boolean[] finish = new boolean[customerNum];
-        int[] work = new int[resourceTypeNum];
-        System.arraycopy(available, 0, work, 0, resourceTypeNum);
-
-        boolean progressMade = true;
-        while (progressMade) {
-            progressMade = false;
-            for (int i = 0; i < customerNum; i++) {
+        while (safeSequence.size() < customerNumber) {
+            boolean progressMade = false;
+            for (int i = 0; i < customerNumber; i++) {
                 if (!finish[i]) {
                     boolean canFinish = true;
-                    for (int j = 0; j < resourceTypeNum; j++) {
-                        if (need[i][j] > work[j]) {
+                    for (int j = 0; j < resourceTypeNumber; j++) {
+                        if (maximum[i][j] - allocation[i][j] > work[j]) {
                             canFinish = false;
                             break;
                         }
                     }
+
                     if (canFinish) {
-                        for (int j = 0; j < resourceTypeNum; j++) {
+                        for (int j = 0; j < resourceTypeNumber; j++) {
                             work[j] += allocation[i][j];
                         }
                         finish[i] = true;
+                        safeSequence.add(i);
                         progressMade = true;
+                        break;
                     }
                 }
             }
-        }
 
-        for (boolean f : finish) {
-            if (!f) {
-                return false;  
+            if (!progressMade) {
+                return new ArrayList<>();
             }
         }
-        return true;  
+        return safeSequence;
     }
 
-    public boolean request(int custId, int[] request) {
-        int[][] need = getNeed();
-        for (int i = 0; i < resourceTypeNum; i++) {
-            if (request[i] > need[custId][i]) {
-                return false; 
+    public boolean request(int customerId, int[] request) {
+        for (int i = 0; i < resourceTypeNumber; i++) {
+            if (request[i] > maximum[customerId][i] - allocation[customerId][i]) {
+                return false;
             }
         }
 
-        for (int i = 0; i < resourceTypeNum; i++) {
+        for (int i = 0; i < resourceTypeNumber; i++) {
             if (request[i] > available[i]) {
-                return false; 
+                return false;
             }
         }
 
-        for (int i = 0; i < resourceTypeNum; i++) {
+        for (int i = 0; i < resourceTypeNumber; i++) {
             available[i] -= request[i];
-            allocation[custId][i] += request[i];
-            need[custId][i] -= request[i];
+            allocation[customerId][i] += request[i];
         }
 
-        if (isSafeState()) {
-            return true; 
-        } else {
-            for (int i = 0; i < resourceTypeNum; i++) {
+        ArrayList<Integer> safeSequence = isSafeState();
+        if (safeSequence.isEmpty()) {
+            for (int i = 0; i < resourceTypeNumber; i++) {
                 available[i] += request[i];
-                allocation[custId][i] -= request[i];
-                need[custId][i] += request[i];
+                allocation[customerId][i] -= request[i];
             }
             return false;
         }
+        return true;
+    }
+
+    public int[] getAvailable() {
+        return available;
+    }
+
+    public int[][] getMaximum() {
+        return maximum;
+    }
+
+    public int[][] getAllocation() {
+        return allocation;
     }
 }
-

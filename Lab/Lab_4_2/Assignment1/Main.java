@@ -1,67 +1,64 @@
-package Assignment1;
-
 import java.util.*;
 
 public class Main {
-	public static void main(String[] args) {
-		H2O h2o = new H2O();
-		Runnable hydrogen = new Runnable() {
+    public static void main(String[] args) throws InterruptedException {
+        H2O h2o = new H2O(true);
+        int N = 5;
 
-			@Override
-			public void run() {
-				try {
-					h2o.hydrogen();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-		};
-		Runnable oxygen = new Runnable() {
+        List<Thread> threads = new ArrayList<>();
 
-			@Override
-			public void run() {
-				try {
-					h2o.oxygen();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-		};
-		Scanner sc = new Scanner(System.in);
-		System.out.println("Enter number of H2O: ");
-		int numOfH2O = sc.nextInt();
+        for (int i = 0; i < N * 2; i++) {
+            HydrogenRunnable h = new HydrogenRunnable(h2o);
+            Thread t = new Thread(h);
+            threads.add(t);
+            t.start();
+        }
 
-		Thread[] hydro = new Thread[numOfH2O * 2];
-		Thread[] oxy = new Thread[numOfH2O];
-		for (int i = 0; i < oxy.length; i++) {
+        for (int i = 0; i < N; i++) {
+            OxygenRunnable o = new OxygenRunnable(h2o);
+            Thread t = new Thread(o);
+            threads.add(t);
+            t.start();
+        }
 
-			oxy[i] = new Thread(oxygen);
-			oxy[i].start();
-		}
-		for (int i = 0; i < hydro.length; i++) {
-			hydro[i] = new Thread(hydrogen);
-			hydro[i].start();
+        for (Thread t : threads) {
+            t.join();
+        }
 
-		}
-		for (int i = 0; i < oxy.length; i++) {
+        System.out.println("Done.");
+    }
+}
 
-			try {
-				oxy[i].join();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		for (int i = 0; i < hydro.length; i++) {
+class HydrogenRunnable implements Runnable {
+    private H2O h2o;
 
-			try {
-				hydro[i].join();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		for (String each : h2o.getHistory()) {
-			System.out.println(each);
-		}
-		System.out.println("There are " + h2o.getNumOfH2O() + " H2O were formed!");
-	}
+    public HydrogenRunnable(H2O h2o) {
+        this.h2o = h2o;
+    }
+
+    @Override
+    public void run() {
+        try {
+            h2o.hydrogen();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+class OxygenRunnable implements Runnable {
+    private H2O h2o;
+
+    public OxygenRunnable(H2O h2o) {
+        this.h2o = h2o;
+    }
+
+    @Override
+    public void run() {
+        try {
+            h2o.oxygen();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 }

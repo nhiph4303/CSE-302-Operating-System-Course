@@ -1,5 +1,3 @@
-package Assignment2;
-
 import java.util.LinkedList;
 
 public class FIFOPolicy implements ReplacementPolicy {
@@ -13,35 +11,41 @@ public class FIFOPolicy implements ReplacementPolicy {
         for (int i = 0; i < values.length; i++) {
             this.values[i] = -1;
         }
+
         for (int i = 0; i < values.length; i++) {
-            this.positionQueue.addLast(i);
+            this.positionQueue.addFirst(i);
         }
     }
 
     @Override
-    public Result refer(int value) {
+    public ReplacementPolicy.Result refer(int value) {
+        Result result;
         for (int i = 0; i < values.length; i++) {
-            if (this.values[i] == value) {
-                return new Result(true, value, i, -1);
+            if (this.values[i] == value) { // found
+                result = new Result(true, value, i, -1);
+                return result;
             }
         }
         int replacedPosition = this.positionQueue.removeFirst();
         int replacedValue = this.values[replacedPosition];
         this.values[replacedPosition] = value;
+
         this.positionQueue.addLast(replacedPosition);
 
-        return new Result(false, value, replacedPosition, replacedValue);
+        result = new Result(false, value, replacedPosition, replacedValue);
+        return result;
     }
 
     @Override
     public void remove(int value) {
         for (int i = 0; i < values.length; i++) {
-            if (this.values[i] == value) {
+            if (this.values[i] == value) { // found
                 this.values[i] = -1;
-                this.positionQueue.remove((Integer)i);
+                this.positionQueue.remove(i);
                 this.positionQueue.addFirst(i);
                 return;
             }
         }
     }
+
 }

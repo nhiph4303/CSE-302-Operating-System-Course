@@ -1,7 +1,6 @@
-package Assignment2;
-
 public interface ReplacementPolicy {
     public Result refer(int value);
+
     public void remove(int value);
 
     public class Result {

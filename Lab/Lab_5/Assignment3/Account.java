@@ -5,7 +5,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Account {
     private int id;
     private double balance;
-    private final ReentrantLock lock = new ReentrantLock();
+    private ReentrantLock lock = new ReentrantLock();
 
     public Account(int id, double balance) {
         this.id = id;
@@ -13,11 +13,21 @@ public class Account {
     }
 
     public double getBalance() {
-        return balance;
+        this.lock.lock();
+        try {
+            return balance;
+        } finally {
+            this.lock.unlock();
+        }
     }
 
     public void setBalance(double balance) {
-        this.balance = balance;
+        this.lock.lock();
+        try {
+            this.balance = balance;
+        } finally {
+            this.lock.unlock();
+        }
     }
 
     public int getId() {

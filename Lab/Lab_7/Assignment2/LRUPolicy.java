@@ -1,49 +1,79 @@
-package Assignment2;
-
-import java.util.LinkedList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class LRUPolicy implements ReplacementPolicy {
-    private int entryNum;
-    private int[] values;
-    private LinkedList<Integer> positionQueue = new LinkedList<>();
+    private final LinkedHashMap<Integer, Integer> lruMap; // key: position, value: page
+    private final int entryNum;
 
     public LRUPolicy(int entryNum) {
         this.entryNum = entryNum;
-        this.values = new int[entryNum];
-        for (int i = 0; i < values.length; i++) {
-            this.values[i] = -1;
-        }
-        for (int i = 0; i < values.length; i++) {
-            this.positionQueue.addLast(i);
-        }
+        this.lruMap = new LinkedHashMap<>(entryNum, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<Integer, Integer> eldest) {
+                return size() > entryNum;
+            }
+        };
     }
 
     @Override
-    public Result refer(int value) {
-        for (int i = 0; i < values.length; i++) {
-            if (this.values[i] == value) {
-                this.positionQueue.remove((Integer)i);
-                this.positionQueue.addLast(i);
-                return new Result(true, value, i, -1);
+    public ReplacementPolicy.Result refer(int value) {
+        // Check if the value exists in any position
+        boolean found = false;
+        int foundPosition = -1;
+        
+        for (Map.Entry<Integer, Integer> entry : lruMap.entrySet()) {
+            if (entry.getValue() == value) {
+                found = true;
+                foundPosition = entry.getKey();
+                break;
             }
         }
-        int replacedPosition = this.positionQueue.removeFirst();
-        int replacedValue = this.values[replacedPosition];
-        this.values[replacedPosition] = value;
-        this.positionQueue.addLast(replacedPosition);
 
-        return new Result(false, value, replacedPosition, replacedValue);
+        if (found) {
+            // Access the entry to mark it as recently used (LinkedHashMap will move it to end)
+            lruMap.get(foundPosition);
+            return new ReplacementPolicy.Result(true, value, foundPosition, -1);
+        } else {
+            // Need to find a position to put the new value
+            int position;
+            int replacedValue = -1;
+            
+            if (lruMap.size() >= entryNum) {
+                // Remove the least recently used entry (first in iteration order)
+                Map.Entry<Integer, Integer> eldest = lruMap.entrySet().iterator().next();
+                position = eldest.getKey();
+                replacedValue = eldest.getValue();
+                lruMap.remove(position);
+            } else {
+                // Find an empty position
+                position = findEmptyPosition();
+            }
+            
+            lruMap.put(position, value);
+            return new ReplacementPolicy.Result(false, value, position, replacedValue);
+        }
     }
 
     @Override
     public void remove(int value) {
-        for (int i = 0; i < values.length; i++) {
-            if (this.values[i] == value) {
-                this.values[i] = -1;
-                this.positionQueue.remove((Integer)i);
-                this.positionQueue.addFirst(i);
-                return;
+        Integer positionToRemove = null;
+        for (Map.Entry<Integer, Integer> entry : lruMap.entrySet()) {
+            if (entry.getValue() == value) {
+                positionToRemove = entry.getKey();
+                break;
             }
         }
+        if (positionToRemove != null) {
+            lruMap.remove(positionToRemove);
+        }
+    }
+
+    private int findEmptyPosition() {
+        for (int i = 0; i < entryNum; i++) {
+            if (!lruMap.containsKey(i)) {
+                return i;
+            }
+        }
+        return -1; // Shouldn't happen if size < entryNum
     }
 }
